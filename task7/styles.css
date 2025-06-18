@@ -1,27 +1,31 @@
-*{
+html, body {
+    min-height: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
-}
-html,body{
-    min-height: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
-.parent{
-    width: 50vw;
-    height: 100%;
+.parent {
+    width: 48vw;
+    height: 50vh; 
     border: 1px solid coral;
-     background-color: lightblue; 
-     position: relative; 
-     touch-action: none;
+    background-color: lightblue;
+    position: relative;
+    touch-action: none;
 }
 
-.child{
-    width: 50px; 
-    height: 50px; 
-    background-color: lightcoral; 
+.child {
+    width: 50px;
+    height: 50px;
+    /* background-color: lightcoral;; */
     position: absolute;
     cursor: grab;
+    background-image: url('./tomato.svg');
+    background-size: cover;
+    background-position: center;
     border-radius: 50%;
 }

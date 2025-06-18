@@ -1,3 +1,6 @@
+const PARENT_INSTANCE_COUNT = 4;
+const CHILD_INSTANCE_COUNT = 4;
+
 class Parent {
     constructor() {
         this.element = document.createElement('div');
@@ -54,8 +57,8 @@ class Child {
         const rect = this.parent.getBoundingClientRect();
         const rectChild = this.element.getBoundingClientRect();
 
-        const newLeft = Math.max(0, Math.min(event.clientX - this.x-4, rect.width - rectChild.width-4));
-        const newTop = Math.max(0, Math.min(event.clientY - this.y-4, rect.height - rectChild.height-4));
+        const newLeft = Math.max(0, Math.min(event.clientX - this.x, rect.width - rectChild.width));
+        const newTop = Math.max(0, Math.min(event.clientY - this.y, rect.height - rectChild.height));
 
         this.element.style.left = `${newLeft}px`;
         this.element.style.top = `${newTop}px`;
@@ -79,18 +82,13 @@ class Child {
     }
 }
 
-const parentInstance1 = new Parent();
-const parentInstance2 = new Parent();
-const parentInstance3 = new Parent();
-const parentInstance4 = new Parent();
-parentInstance1.addChild(); 
-parentInstance2.addChild(); 
-parentInstance2.addChild(); 
-parentInstance2.addChild(); 
-parentInstance2.addChild(); 
-parentInstance3.addChild(); 
-parentInstance4.addChild(); 
-parentInstance3.addChild(); 
-parentInstance4.addChild(); 
-parentInstance3.addChild(); 
-parentInstance4.addChild(); 
+const parentInstances = [];
+for (let i = 0; i < PARENT_INSTANCE_COUNT; i++) {
+    parentInstances.push(new Parent());
+}
+for (let i = 0; i < PARENT_INSTANCE_COUNT; i++) {
+    for (let j = 0; j < CHILD_INSTANCE_COUNT; j++) {
+        parentInstances[i].addChild();
+    }
+}
+
