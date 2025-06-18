@@ -12,8 +12,8 @@ class Parent {
         window.addEventListener('resize', this.onResize.bind(this));
     }
 
-    addChild() {
-        const child = new Child(this);
+    addChild(clsName) {
+        const child = new Child(this, clsName);
         this.children.push(child);
         this.element.appendChild(child.element);
     }
@@ -24,10 +24,10 @@ class Parent {
 }
 
 class Child {
-    constructor(parentInstance) {
+    constructor(parentInstance, clsName= 'child') {
         this.parent = parentInstance.element;
         this.element = document.createElement('div');
-        this.element.className = 'child';
+        this.element.className = clsName;
 
         this.x = 0;
         this.y = 0;
@@ -60,6 +60,7 @@ class Child {
         const newLeft = Math.max(0, Math.min(event.clientX - this.x, rect.width - rectChild.width));
         const newTop = Math.max(0, Math.min(event.clientY - this.y, rect.height - rectChild.height));
 
+
         this.element.style.left = `${newLeft}px`;
         this.element.style.top = `${newTop}px`;
 
@@ -83,12 +84,20 @@ class Child {
 }
 
 const parentInstances = [];
-for (let i = 0; i < PARENT_INSTANCE_COUNT; i++) {
+for (let i=0; i<PARENT_INSTANCE_COUNT;i++) {
     parentInstances.push(new Parent());
 }
-for (let i = 0; i < PARENT_INSTANCE_COUNT; i++) {
-    for (let j = 0; j < CHILD_INSTANCE_COUNT; j++) {
-        parentInstances[i].addChild();
+for (let i=0; i< PARENT_INSTANCE_COUNT;i++) {
+    for (let j=0;j<CHILD_INSTANCE_COUNT;j++) {
+        if (j%2=== 0) {
+            parentInstances[i].addChild('child2');
+        }else if(j%3==0){
+
+            parentInstances[i].addChild('child3');
+        }
+        else {
+            parentInstances[i].addChild();
+        }
     }
 }
 
