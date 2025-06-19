@@ -270,7 +270,7 @@ footer {
   display: grid;
   max-width: -moz-fit-content;
   max-width: fit-content;
-  padding: 20px;
+  padding-inline: 20px;
   grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
   margin-inline: auto;
@@ -309,16 +309,17 @@ footer {
 .star-icon {
   position: absolute;
   width: 24px;
-  height: 24px;
   fill: #cccccc;
   cursor: pointer;
   transition: fill 0.3s ease;
+  transition: scale 0.3s ease;
   right: 25px;
   top: 25px;
 }
 
 .star-icon.filled {
-  fill: gold;
+  fill: #EDC900;
+  scale: 1.2;
 }
 
 #courseSel {
