@@ -13,7 +13,7 @@ class CanvasGrid {
 
         // Data storage
         this.data = [];
-        this.dataColumns = ['id', 'firstName', 'lastName', 'age', 'salary'];
+        this.dataColumns = [];
 
         // Initialize systems
         this.commandManager = new CommandManager();
@@ -141,7 +141,7 @@ class CanvasGrid {
 
     populateGridWithData(data) {
         this.data = data;
-
+        this.dataColumns = Object.keys(data[0] || {});
         // Set column headers in row 1 (not row 0!)
         this.dataColumns.forEach((colName, index) => {
             this.setCellValueDirect(1, index + 1, colName.charAt(0).toUpperCase() + colName.slice(1));
@@ -592,6 +592,22 @@ class CanvasGrid {
     stopResize() {
         if (!this.isResizing) return;
 
+        const type = this.resizeType;
+        const index = this.resizeIndex;
+        const oldSize = this.resizeStartSize;
+        let newSize;
+        if (type === 'column') {
+            newSize = this.getColumn(index).getSize();
+        } else {
+            newSize = this.getRow(index).getSize();
+        }
+
+        // Only add to undo stack if size actually changed
+        if (oldSize !== newSize) {
+            const command = new ResizeCommand(this, type, index, oldSize, newSize);
+            this.commandManager.executeCommand(command);
+        }
+
         this.isResizing = false;
         this.resizeType = null;
         this.resizeIndex = -1;
@@ -697,14 +713,14 @@ class CanvasGrid {
         const endX = this.getColumnPosition(endCol + 1) - this.scrollX;
         const endY = this.getRowPosition(endRow + 1) - this.scrollY;
 
-        ctx.strokeStyle = '#2196F3';
+        ctx.strokeStyle = '#4CAF50';
         ctx.lineWidth = 3;
         ctx.setLineDash([]);
 
         ctx.strokeRect(startX, startY, endX - startX, endY - startY);
 
         const handleSize = 6;
-        ctx.fillStyle = '#2196F3';
+        ctx.fillStyle = '#4CAF50';
         ctx.fillRect(endX - handleSize / 2, endY - handleSize / 2, handleSize, handleSize);
     }
 
@@ -721,10 +737,9 @@ class CanvasGrid {
 }
 
 // Initialize the grid
-const grid = new CanvasGrid('grid', 100000, 500);
+const grid = new CanvasGrid('grid', 100001, 1001);
 
 // Try to load data automatically
 grid.loadData().catch(() => {
-    // If data.json doesn't exist, just show ready state
     grid.info.textContent = 'Ready - Grid initialized';
 });

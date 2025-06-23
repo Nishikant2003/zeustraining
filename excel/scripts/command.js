@@ -56,6 +56,41 @@ class EditCellCommand extends Command {
     }
 }
 
+class ResizeCommand extends Command {
+    constructor(grid, type, index, oldSize, newSize) {
+        super(`Resize ${type} ${index}: ${oldSize} → ${newSize}`);
+        this.grid = grid;
+        this.type = type; // 'row' or 'column'
+        this.index = index;
+        this.oldSize = oldSize;
+        this.newSize = newSize;
+    }
+
+    execute() {
+        if (this.type === 'row') {
+            this.grid.getRow(this.index).setSize(this.newSize);
+        } else {
+            this.grid.getColumn(this.index).setSize(this.newSize);
+        }
+        this.grid.buildPositionCaches();
+        this.grid.setupScrollArea();
+        this.grid.calculateVisibleRange();
+        this.grid.requestRender();
+    }
+
+    undo() {
+        if (this.type === 'row') {
+            this.grid.getRow(this.index).setSize(this.oldSize);
+        } else {
+            this.grid.getColumn(this.index).setSize(this.oldSize);
+        }
+        this.grid.buildPositionCaches();
+        this.grid.setupScrollArea();
+        this.grid.calculateVisibleRange();
+        this.grid.requestRender();
+    }
+}
+
 class CommandManager {
     constructor(maxHistorySize = 100) {
         this.undoStack = [];

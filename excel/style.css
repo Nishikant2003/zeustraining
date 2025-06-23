@@ -3,12 +3,19 @@ body {
     font-family: Arial, sans-serif;
     overflow: hidden;
     touch-action: none;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 .container {
+    margin-top: auto;
     position: relative;
     width: 100vw;
-    height: 100vh;
+    height: 90vh;
     overflow: auto;
 }
 
@@ -47,7 +54,7 @@ canvas.resize-row {
 
 .cell-editor {
     position: fixed;
-    border: 2px solid #4CAF50;
+    border: none;
     background: white;
     font-family: Arial, sans-serif;
     font-size: 12px;

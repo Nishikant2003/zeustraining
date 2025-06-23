@@ -31,11 +31,11 @@ class Cell {
         if (this.isHeader()) {
             if ((this.row === 0 && selection.isColumnHighlighted(this.col)) ||
                 (this.col === 0 && selection.isRowHighlighted(this.row))) {
-                return '#BBDEFB';
+                return '#a0d8b9';
             }
             return '#f0f0f0';
         }
-        if (selection.isCellSelected(this.row, this.col)) return '#E3F2FD';
+        if (selection.isCellSelected(this.row, this.col)) return '#a0d8b9';
         return '#ffffff';
     }
 
@@ -46,27 +46,21 @@ class Cell {
     draw(ctx, x, y, width, height, selection) {
         ctx.fillStyle = this.getBackgroundColor(selection);
         ctx.fillRect(x, y, width, height);
-
-        if (selection.isCellSelected(this.row, this.col) && !this.isHeader()) {
-            ctx.strokeStyle = '#2196F3';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x + 1, y + 1, width - 2, height - 2);
-        }
-
-        ctx.strokeStyle = '#ddd';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, width, height);
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 0.1;
+        ctx.strokeRect(Math.floor(x) + 0.5, Math.floor(y) + 0.5, width, height);
 
         ctx.fillStyle = this.getTextColor();
         ctx.font = '12px Arial';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-
+        
         const text = this.getValue();
         const maxWidth = width - 8;
 
         ctx.save();
         ctx.beginPath();
+
         ctx.rect(x + 2, y, width - 4, height);
         ctx.clip();
 

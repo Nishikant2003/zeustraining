@@ -1,0 +1,17 @@
+Finished Tasks
+
+
+0. Understanding code logic
+Excel Pending Issues
+1. Formula Bar
+2. Separate Buttons with formula bar for count, min, max, sum and average
+3. undo and redo buttons  on screen prob add a curved arrow
+4. Comments for class variables and functions
+5. Scrolling to the end, causes the row and col headers to sink in
+6. keyboard navigation 
+7. text gets squished when resizing rows and columns
+8. green theme
+9. selection and editing should not just be double click should happen with keyboard navigation.
+10. Direct lines dont fill with cells
+11. row headers should expand with added numbers
+12. sheets section
