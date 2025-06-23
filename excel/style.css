@@ -1,0 +1,59 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+}
+
+.scroll-content {
+    position: relative;
+}
+
+canvas {
+    position: sticky;
+    top: 0;
+    left: 0;
+    display: block;
+    cursor: cell;
+    pointer-events: auto;
+}
+
+canvas.resize-col {
+    cursor: col-resize;
+}
+
+canvas.resize-row {
+    cursor: row-resize;
+}
+
+.info {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 100;
+}
+
+.cell-editor {
+    position: fixed;
+    border: 2px solid #4CAF50;
+    background: white;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    padding: 2px 4px;
+    margin: 0;
+    outline: none;
+    z-index: 200;
+    box-sizing: border-box;
+}
