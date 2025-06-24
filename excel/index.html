@@ -4,12 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clean Grid</title>
+    <title>Excel</title>
     <link rel="stylesheet" href="style.css">
 
 </head>
 
 <body>
+    <div class="formula-bar-container">
+    <label for="formulaBar" style="margin-right:6px;">fx</label>
+    <input type="text" id="formulaBar" class="formula-bar" autocomplete="off" />
+</div>
+    <div class="toolbar">
+        <!-- <button id="undoBtn" title="Undo (Ctrl+Z)">U</button>
+        <button id="redoBtn" title="Redo (Ctrl+Y)">R</button>
+        <button id="copyBtn" title="Copy (Ctrl+C)">C</button>
+        <button id="pasteBtn" title="Paste (Ctrl+V)">V</button> -->
+    
+    </div>
+
     <div class="container" id="container">
         <div class="scroll-content" id="scrollContent">
             <canvas id="grid"></canvas>

@@ -43,28 +43,56 @@ class Cell {
         return this.isHeader() ? '#333' : '#000';
     }
 
-    draw(ctx, x, y, width, height, selection) {
+draw(ctx, x, y, width, height, selection) {
+    // Solid background for headers
+    if (this.isHeader()) {
+        ctx.fillStyle = '#f0f0f0'; // Solid color for header background
+        ctx.fillRect(x, y, width, height);
+    } else {
         ctx.fillStyle = this.getBackgroundColor(selection);
         ctx.fillRect(x, y, width, height);
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 0.1;
-        ctx.strokeRect(Math.floor(x) + 0.5, Math.floor(y) + 0.5, width, height);
+    }
 
-        ctx.fillStyle = this.getTextColor();
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'left';
+    ctx.fillStyle = this.getTextColor();
+    ctx.font = '12px Arial';
+
+    // Right-align row numbers in row header
+    if (this.col === 0 && this.row > 0) {
+        ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
-        
         const text = this.getValue();
-        const maxWidth = width - 8;
-
         ctx.save();
         ctx.beginPath();
-
-        ctx.rect(x + 2, y, width - 4, height);
+        ctx.rect(x, y, width, height);
         ctx.clip();
-
-        ctx.fillText(text, x + 4, y + height / 2, maxWidth);
+        ctx.fillText(text, x + width - 6, y + height / 2); // 6px padding from right
         ctx.restore();
+        return;
     }
+
+    // Center column header text
+    if (this.row === 0 && this.col > 0) {
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const text = this.getValue();
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x, y, width, height);
+        ctx.clip();
+        ctx.fillText(text, x + width / 2, y + height / 2);
+        ctx.restore();
+        return;
+    }
+
+    // Normal cells
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const text = this.getValue();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x + 2, y, width - 4, height);
+    ctx.clip();
+    ctx.fillText(text, x + 4, y + height / 2);
+    ctx.restore();
+}
 }

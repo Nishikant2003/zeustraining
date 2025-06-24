@@ -4,8 +4,8 @@ body {
     overflow: hidden;
     touch-action: none;
     display: flex;
-    min-height: 100vh;
     flex-direction: column;
+    min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -15,7 +15,7 @@ body {
     margin-top: auto;
     position: relative;
     width: 100vw;
-    height: 90vh;
+    height: 86vh;
     overflow: auto;
 }
 
@@ -42,7 +42,7 @@ canvas.resize-row {
 
 .info {
     position: fixed;
-    top: 10px;
+    top: 90px;
     left: 10px;
     background: rgba(0, 0, 0, 0.8);
     color: white;
@@ -54,13 +54,44 @@ canvas.resize-row {
 
 .cell-editor {
     position: fixed;
-    border: none;
-    background: white;
+    background: transparent;
     font-family: Arial, sans-serif;
     font-size: 12px;
     padding: 2px 4px;
+    border: 1px solid #e7f1ec;
     margin: 0;
     outline: none;
     z-index: 200;
     box-sizing: border-box;
+}
+
+.toolbar {
+    position: fixed;
+    top: 0;
+    right:0;
+    display: flex;
+    justify-content: end;
+}
+.toolbar button {
+    font-size: 12px;
+}
+
+.formula-bar-container {
+    width: 100%;
+    max-width: 1500px;
+    margin: 20px;
+    background: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+    z-index: 150;
+    display: flex;
+    padding: 5px;
+    align-items: center;
+}
+.formula-bar {
+    flex: 1;
+    font-size: 15px;
+    padding: 4px 8px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    background: #fff;
 }

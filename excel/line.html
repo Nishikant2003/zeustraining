@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" media="all" href="css/reset.css" /> <!-- reset css -->
+<script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+<style>
+    body{ background-color: ivory; }
+    canvas{border:1px solid red;}
+</style>
+<script>
+$(function(){
+
+    var canvas=document.getElementById("canvas");
+    var ctx=canvas.getContext("2d");
+
+    var imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    var data=imgData.data;
+
+    bline(50,50,250,250);
+    ctx.putImageData(imgData,0,0);
+
+    function setPixel(x,y){
+        var n=(y*canvas.width+x)*4;
+        data[n]=255;
+        data[n+1]=0;
+        data[n+2]=0;
+        data[n+3]=255;
+    }
+
+    // Refer to: http://rosettacode.org/wiki/Bitmap/Bresenham's_line_algorithm#JavaScript
+    function bline(x0, y0, x1, y1) {
+      var dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+      var dy = Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1; 
+      var err = (dx>dy ? dx : -dy)/2;        
+      while (true) {
+        setPixel(x0,y0);
+        if (x0 === x1 && y0 === y1) break;
+        var e2 = err;
+        if (e2 > -dx) { err -= dy; x0 += sx; }
+        if (e2 < dy) { err += dx; y0 += sy; }
+      }
+    }
+
+}); // end $(function(){});
+</script>
+</head>
+<body>
+    <canvas id="canvas" width=300 height=300></canvas>
+</body>
+</html>

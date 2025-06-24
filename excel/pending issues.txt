@@ -8,10 +8,14 @@ Excel Pending Issues
 3. undo and redo buttons  on screen prob add a curved arrow
 4. Comments for class variables and functions
 5. Scrolling to the end, causes the row and col headers to sink in
-6. keyboard navigation 
-7. text gets squished when resizing rows and columns
-8. green theme
+//6. keyboard navigation 
+//7. text squishing issue on resizing
+//8. green theme
 9. selection and editing should not just be double click should happen with keyboard navigation.
-10. Direct lines dont fill with cells
+//10. Direct lines dont fill with cells
 11. row headers should expand with added numbers
-12. sheets section
+12. 1px lines
+13. header borders are way too thick
+14. clicking in the top left corner empty cell slowss
+15. will hvae to add ctrl c and v action as a whole into stack
+16. blurry canvas

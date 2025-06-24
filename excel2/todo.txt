@@ -1,0 +1,15 @@
+1. Perfect Clean grid with super fine lines //
+2. Add headers for rows and columns - debug the letters - numbers should increase the row width
+3. make it scrollable upto 1 lakh row and 500 columns with virtual rendering or chunks
+4. Resizing rows and columns - command pattern
+5. Editing a cell - command pattern
+6. Cursor Cell //
+7. DPR Change on zoom in/out (resize) //
+8. Editing the cell
+9. Loading JSON Data (maybe try with virtual rendering)
+10. Support Column selection, row and cell ranges.
+11. Optimize data storage with fetching little by little I think
+12. Keyboard Navigation 
+13. Freeze Headers
+
+REFACTOR + STEP BY STEP UNDERSTANDING + Optimize
