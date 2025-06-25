@@ -1,7 +1,3 @@
-Finished Tasks
-
-
-0. Understanding code logic
 Excel Pending Issues
 1. Formula Bar
 2. Separate Buttons with formula bar for count, min, max, sum and average
@@ -14,8 +10,15 @@ Excel Pending Issues
 9. selection and editing should not just be double click should happen with keyboard navigation.
 //10. Direct lines dont fill with cells
 11. row headers should expand with added numbers
-12. 1px lines
-13. header borders are way too thick
+12. 1px lines//
+13. header borders are way too thick//
 14. clicking in the top left corner empty cell slowss
 15. will hvae to add ctrl c and v action as a whole into stack
-16. blurry canvas
+16. blurry canvas//
+17. seperate out the row and col headers - important// Works without seperation we chill
+18. work on loading JSON data in virtual scrolling itself
+19. arrow keys remove the firstselection//
+20. Double click edit to single click edit
+21. header colors are gone
+22. Scroll throttling
+23. border is coming green for headers

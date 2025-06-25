@@ -5,7 +5,7 @@ class CanvasGrid {
         this.container = document.getElementById('container');
         this.scrollContent = document.getElementById('scrollContent');
         this.info = document.getElementById('info');
-
+        this.dpr = window.devicePixelRatio || 1;
         this.rowCount = rowCount;
         this.colCount = colCount;
         this.scrollX = 0;
@@ -65,7 +65,13 @@ class CanvasGrid {
         this.calculateVisibleRange();
         this.render();
     }
-
+    updateDevicePixelRatio() {
+        const newDPR = window.devicePixelRatio || 1;
+        if (newDPR !== this.dpr) {
+            this.dpr = newDPR;
+            this.setupCanvas();
+        }
+    }
     initializeStructures() {
         for (let i = 0; i < this.colCount; i++) {
             this.columns.set(i, new RowColumn(i, 'column', this.rowCount));
@@ -88,13 +94,11 @@ class CanvasGrid {
             const colWidth = this.getColumn(i).getSize();
             this.colPositions.push(this.colPositions[i] + colWidth);
         }
-    }   
-  
-      updateRowHeaderWidth() {
-        // Find the largest visible row number
+    }
+
+    updateRowHeaderWidth() {
         const maxRow = this.endRow || this.rowCount - 1;
         const digits = maxRow.toString().length;
-        // Estimate width: 8px per digit + 12px padding
         const width = digits * 8 + 12;
         this.getColumn(0).setSize(width);
     }
@@ -168,14 +172,24 @@ class CanvasGrid {
 
         this.requestRender();
     }
-
     setupCanvas() {
+        // Update device pixel ratio
+        this.dpr = window.devicePixelRatio || 1;
 
-        this.canvas.width = this.container.clientWidth;
-        this.canvas.height = this.container.clientHeight;
+        // Set canvas size in device pixels
+        this.canvas.width = this.container.clientWidth * this.dpr;
+        this.canvas.height = this.container.clientHeight * this.dpr;
 
-        this.visibleRows = Math.ceil(this.canvas.height / 25) + 5;
-        this.visibleCols = Math.ceil(this.canvas.width / 100) + 5;
+        // Set canvas style size in CSS pixels
+        this.canvas.style.width = this.container.clientWidth + 'px';
+        this.canvas.style.height = this.container.clientHeight + 'px';
+
+        // Scale context for crisp drawing
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset any transforms
+        this.ctx.scale(this.dpr, this.dpr);
+
+        this.visibleRows = Math.ceil(this.canvas.height / (25 * this.dpr)) + 5;
+        this.visibleCols = Math.ceil(this.canvas.width / (100 * this.dpr)) + 5;
     }
 
     updateScrollPosition() {
@@ -190,16 +204,16 @@ class CanvasGrid {
 
     calculateVisibleRange() {
         this.startRow = this.binarySearchPosition(this.rowPositions, this.scrollY);
-        this.startRow = Math.max(0, this.startRow - 2);
+        this.startRow = Math.max(0, this.startRow);
 
         this.endRow = this.binarySearchPosition(this.rowPositions, this.scrollY + this.canvas.height);
-        this.endRow = Math.min(this.rowCount - 1, this.endRow + 2);
+        this.endRow = Math.min(this.rowCount, this.endRow);
 
         this.startCol = this.binarySearchPosition(this.colPositions, this.scrollX);
-        this.startCol = Math.max(0, this.startCol - 2);
+        this.startCol = Math.max(0, this.startCol);
 
         this.endCol = this.binarySearchPosition(this.colPositions, this.scrollX + this.canvas.width);
-        this.endCol = Math.min(this.colCount - 1, this.endCol + 2);
+        this.endCol = Math.min(this.colCount, this.endCol);
 
     }
 
@@ -348,6 +362,7 @@ class CanvasGrid {
                     this.selection.startDragSelection(cellPos.row, cellPos.col);
                     this.updateInfoDisplay();
                     this.requestRender();
+                    this.startEditing(cellPos.row, cellPos.col);
                 }
             }
         });
@@ -403,33 +418,60 @@ class CanvasGrid {
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // Keyboard navigation for selection
-            // ...existing code...
 
-            // Keyboard navigation for selection
             const sel = this.selection.getCurrentSelection && this.selection.getCurrentSelection();
             if (!sel) return;
-
-            let { startRow, startCol, endRow, endCol } = sel;
-            let anchorRow = this.selection.anchorRow ?? startRow;
-            let anchorCol = this.selection.anchorCol ?? startCol;
-            let activeRow = endRow;
-            let activeCol = endCol;
-            let changed = false;
-
-            // Arrow keys: move selection
             if (!this.isEditing) {
+                const currentSelection = this.selection.getCurrentSelection();
+                if (!currentSelection) return;
+
+                const { startRow, startCol, endRow, endCol, anchorRow, anchorCol } = currentSelection;
+
                 if (e.shiftKey) {
-                    // Expand/shrink selection from anchor
-                    if (e.key === 'ArrowUp') {
-                        if (activeRow > 1) activeRow--, changed = true;
-                    } else if (e.key === 'ArrowDown') {
-                        if (activeRow < this.rowCount - 1) activeRow++, changed = true;
-                    } else if (e.key === 'ArrowLeft') {
-                        if (activeCol > 1) activeCol--, changed = true;
-                    } else if (e.key === 'ArrowRight') {
-                        if (activeCol < this.colCount - 1) activeCol++, changed = true;
+                    let activeRow, activeCol;
+
+                    if (anchorRow === startRow && anchorCol === startCol) {
+                        // Anchor is top-left, active is bottom-right
+                        activeRow = endRow;
+                        activeCol = endCol;
+                    } else if (anchorRow === endRow && anchorCol === endCol) {
+                        // Anchor is bottom-right, active is top-left
+                        activeRow = startRow;
+                        activeCol = startCol;
+                    } else if (anchorRow === startRow && anchorCol === endCol) {
+                        // Anchor is top-right, active is bottom-left
+                        activeRow = endRow;
+                        activeCol = startCol;
+                    } else {
+                        // Anchor is bottom-left, active is top-right
+                        activeRow = startRow;
+                        activeCol = endCol;
                     }
+
+                    let changed = false;
+
+                    if (e.key === 'ArrowUp') {
+                        if (activeRow > 1) {
+                            activeRow--;
+                            changed = true;
+                        }
+                    } else if (e.key === 'ArrowDown') {
+                        if (activeRow < this.rowCount - 1) {
+                            activeRow++;
+                            changed = true;
+                        }
+                    } else if (e.key === 'ArrowLeft') {
+                        if (activeCol > 1) {
+                            activeCol--;
+                            changed = true;
+                        }
+                    } else if (e.key === 'ArrowRight') {
+                        if (activeCol < this.colCount - 1) {
+                            activeCol++;
+                            changed = true;
+                        }
+                    }
+
                     if (changed) {
                         this.selection.selectRange(anchorRow, anchorCol, activeRow, activeCol);
                         this.updateInfoDisplay();
@@ -439,19 +481,26 @@ class CanvasGrid {
                     }
                 } else {
                     // Move single cell selection and update anchor
+                    let newRow = startRow;
+                    let newCol = startCol;
+                    let changed = false;
+
                     if (e.key === 'ArrowUp' && startRow > 1) {
-                        startRow--; endRow--; changed = true;
+                        newRow--;
+                        changed = true;
                     } else if (e.key === 'ArrowDown' && endRow < this.rowCount - 1) {
-                        startRow++; endRow++; changed = true;
+                        newRow++;
+                        changed = true;
                     } else if (e.key === 'ArrowLeft' && startCol > 1) {
-                        startCol--; endCol--; changed = true;
+                        newCol--;
+                        changed = true;
                     } else if (e.key === 'ArrowRight' && endCol < this.colCount - 1) {
-                        startCol++; endCol++; changed = true;
+                        newCol++;
+                        changed = true;
                     }
+
                     if (changed) {
-                        this.selection.selectRange(startRow, startCol, startRow, startCol);
-                        this.selection.anchorRow = startRow;
-                        this.selection.anchorCol = startCol;
+                        this.selection.selectRange(newRow, newCol, newRow, newCol);
                         this.updateInfoDisplay();
                         this.requestRender();
                         e.preventDefault();
@@ -460,7 +509,6 @@ class CanvasGrid {
                 }
             }
 
-            // ...existing code...
 
             // Ctrl+C (Copy)
             if (e.ctrlKey && e.key.toLowerCase() === 'c') {
@@ -610,7 +658,6 @@ class CanvasGrid {
         const width = this.getColumn(col).getSize();
         const height = this.getRow(row).getSize();
 
-        // Check if cell is visible
         const isVisible = cellX >= 0 && cellY >= 0 &&
             cellX < this.canvas.width && cellY < this.canvas.height;
 
@@ -621,7 +668,6 @@ class CanvasGrid {
             this.editor.style.height = (height - 2) + 'px';
             this.editor.style.display = 'block';
         } else {
-            // Hide editor if cell is not visible
             this.editor.style.display = 'none';
         }
     }
@@ -629,7 +675,6 @@ class CanvasGrid {
     getResizeHandle(x, y) {
         const tolerance = 5;
 
-        // Check column resize handles (right edge of column headers)
         if (y <= this.getRow(0).getSize()) {
             for (let col = this.startCol; col <= this.endCol && col < this.colCount; col++) {
                 if (col === 0) continue;
@@ -640,7 +685,6 @@ class CanvasGrid {
             }
         }
 
-        // Check row resize handles (bottom edge of row headers)
         if (x <= this.getColumn(0).getSize()) {
             for (let row = this.startRow; row <= this.endRow && row < this.rowCount; row++) {
                 if (row === 0) continue;
@@ -756,6 +800,7 @@ class CanvasGrid {
                 }
             }
         }
+        this.drawGridLines();
 
         // Render visible row headers
         for (const rowIndex of visibleDataRows) {
@@ -790,44 +835,43 @@ class CanvasGrid {
         cornerCell.draw(ctx, 0, 0, cornerWidth, cornerHeight, this.selection);
 
         // Draw selection outline
-        this.drawGridLines();
 
         this.drawSelectionOutline();
-        
+
     }
     drawGridLines() {
-    const { ctx, canvas, scrollX, scrollY } = this;
+        const { ctx, canvas, scrollX, scrollY } = this;
 
-    ctx.save();
-    ctx.strokeStyle = '#bbb';
-    ctx.lineWidth = 1;
+        ctx.save();
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 0.1;
 
-    // Draw vertical lines
-    for (let col = this.startCol; col <= this.endCol + 1 && col <= this.colCount; col++) {
-        // Skip the first vertical line at x=0 to avoid drawing over row header text
-        if (col === 0) continue;
-        const x = this.getColumnPosition(col) - scrollX;
-        if (x >= 0 && x <= canvas.width) {
-            ctx.beginPath();
-            ctx.moveTo(Math.floor(x) + 0.5, 0);
-            ctx.lineTo(Math.floor(x) + 0.5, canvas.height);
-            ctx.stroke();
+        // Draw vertical lines
+        for (let col = this.startCol; col <= this.endCol + 1 && col <= this.colCount; col++) {
+            // Skip the first vertical line at x=0 to avoid drawing over row header text
+            if (col === 0) continue;
+            const x = this.getColumnPosition(col) - scrollX;
+            if (x >= 0 && x <= canvas.width) {
+                ctx.beginPath();
+                ctx.moveTo(Math.floor(x) + 0.5, 0);
+                ctx.lineTo(Math.floor(x) + 0.5, canvas.height);
+                ctx.stroke();
+            }
         }
-    }
 
-    // Draw horizontal lines
-    for (let row = this.startRow; row <= this.endRow + 1 && row <= this.rowCount; row++) {
-        const y = this.getRowPosition(row) - scrollY;
-        if (y >= 0 && y <= canvas.height) {
-            ctx.beginPath();
-            ctx.moveTo(0, Math.floor(y) + 0.5);
-            ctx.lineTo(canvas.width, Math.floor(y) + 0.5);
-            ctx.stroke();
+        // Draw horizontal lines
+        for (let row = this.startRow; row <= this.endRow + 1 && row <= this.rowCount; row++) {
+            const y = this.getRowPosition(row) - scrollY;
+            if (y >= 0 && y <= canvas.height) {
+                ctx.beginPath();
+                ctx.moveTo(0, Math.floor(y) + 0.5);
+                ctx.lineTo(canvas.width, Math.floor(y) + 0.5);
+                ctx.stroke();
+            }
         }
-    }
 
-    ctx.restore();
-}
+        ctx.restore();
+    }
     drawSelectionOutline() {
         const currentSelection = this.selection.getCurrentSelection();
         if (!currentSelection) return;
@@ -845,8 +889,11 @@ class CanvasGrid {
         ctx.setLineDash([]);
 
         ctx.strokeRect(startX, startY, endX - startX, endY - startY);
-
-        const handleSize = 6;
+ 
+        let handleSize = 7;
+        ctx.fillStyle = "#ffffff"
+        ctx.fillRect(endX - handleSize / 2, endY - handleSize / 2, handleSize, handleSize);
+        handleSize = 6;
         ctx.fillStyle = '#4CAF50';
         ctx.fillRect(endX - handleSize / 2, endY - handleSize / 2, handleSize, handleSize);
     }

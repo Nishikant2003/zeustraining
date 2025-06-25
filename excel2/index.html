@@ -3,16 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Multi-Canvas Grid with Separated Headers</title>
   <link rel="stylesheet" href="styles.css">
-  <title>Aligned Grid with Headers</title>
 </head>
 <body>
-  <div id="container">
-      <canvas class="mainCanvas" id="gridCanvas"></canvas>
-       <canvas id="canvasColHeader"></canvas>
-        <canvas id="canvasRowHeader"></canvas>
-        <canvas id="canvasCorner"></canvas>
+  <div class="grid-container">
+    <canvas id="cornerCanvas" class="corner-canvas"></canvas>
+    <canvas id="columnHeaderCanvas" class="column-header-canvas"></canvas>
+    <canvas id="rowHeaderCanvas" class="row-header-canvas"></canvas>
+    <canvas id="mainCanvas" class="main-canvas"></canvas>
+    <canvas id="hScrollbar" class="h-scrollbar"></canvas>
+    <canvas id="vScrollbar" class="v-scrollbar"></canvas>
+    <div class="scrollbar-corner"></div>
   </div>
-  <script src="script.js"></script>
+<script src="selection.js"></script>
+<script src="grid.js"></script>
 </body>
 </html>

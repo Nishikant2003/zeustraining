@@ -1,5 +1,5 @@
 1. Perfect Clean grid with super fine lines //
-2. Add headers for rows and columns - debug the letters - numbers should increase the row width
+2. Add headers for rows and columns// - debug the letters// - numbers should increase the row width
 3. make it scrollable upto 1 lakh row and 500 columns with virtual rendering or chunks
 4. Resizing rows and columns - command pattern
 5. Editing a cell - command pattern

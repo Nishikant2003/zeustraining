@@ -15,7 +15,7 @@ body {
     margin-top: auto;
     position: relative;
     width: 100vw;
-    height: 86vh;
+    height: 100vh;
     overflow: auto;
 }
 
@@ -58,7 +58,7 @@ canvas.resize-row {
     font-family: Arial, sans-serif;
     font-size: 12px;
     padding: 2px 4px;
-    border: 1px solid #e7f1ec;
+    border: none;
     margin: 0;
     outline: none;
     z-index: 200;

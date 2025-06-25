@@ -8,6 +8,10 @@
   font: inherit;
 }
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   font-family: "Quicksand";
   min-height: 100vh;
@@ -716,4 +720,19 @@ select:has(> option[value="No Classes"]:checked) {
 
 .opaclass {
   opacity: 0.4;
+}
+
+@media (max-width: 451px) {
+  .alertd {
+    padding-inline: 5px;
+  }
+  .annd {
+    padding-inline: 5px;
+  }
+  .prod {
+    padding-inline: 5px;
+  }
+  .hamburger-icon {
+    padding-inline: 5px;
+  }
 }/*# sourceMappingURL=styles.css.map */

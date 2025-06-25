@@ -1,4 +1,4 @@
-function getColumnName(col) {
+ function getColumnName(col) {
     if (col === 0) return "";
     col = col - 1;
     let result = '';

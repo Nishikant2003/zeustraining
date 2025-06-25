@@ -13,12 +13,17 @@ class Selection {
         this.selectedCells.clear();
         this.currentSelection = null;
     }
+    isFirstSelection(row, col) {
+        if (!this.currentSelection) return false;
+    return row === this.currentSelection.anchorRow && col === this.currentSelection.anchorCol;
+}
 
     addCellToSelection(row, col) {
         this.selectedCells.add(`${row},${col}`);
     }
 
     isCellSelected(row, col) {
+        
         return this.selectedCells.has(`${row},${col}`);
     }
 
@@ -32,27 +37,29 @@ class Selection {
         return col >= this.currentSelection.startCol && col <= this.currentSelection.endCol;
     }
 
-    selectRange(startRow, startCol, endRow, endCol) {
-        this.clearSelection();
+selectRange(startRow, startCol, endRow, endCol) {
+    this.clearSelection();
 
-        const minRow = Math.min(startRow, endRow);
-        const maxRow = Math.max(startRow, endRow);
-        const minCol = Math.min(startCol, endCol);
-        const maxCol = Math.max(startCol, endCol);
+    const minRow =  Math.min(startRow, endRow);
+    const maxRow =  Math.max(startRow, endRow);
+    const minCol =  Math.min(startCol, endCol);
+    const maxCol =  Math.max(startCol, endCol);
 
-        for (let row = minRow; row <= maxRow; row++) {
-            for (let col = minCol; col <= maxCol; col++) {
-                this.addCellToSelection(row, col);
-            }
+    for (let row = minRow; row <= maxRow; row++) {
+        for (let col = minCol; col <= maxCol; col++) {
+            this.addCellToSelection(row, col);
         }
-
-        this.currentSelection = {
-            startRow: minRow,
-            startCol: minCol,
-            endRow: maxRow,
-            endCol: maxCol
-        };
     }
+
+    this.currentSelection = {
+        anchorRow: startRow,
+        anchorCol: startCol,
+        startRow: minRow,
+        startCol: minCol,
+        endRow: maxRow,
+        endCol: maxCol
+    };
+}
 
     startDragSelection(row, col) {
         this.isDragging = true;

@@ -9,7 +9,9 @@
 	padding: 0;
 	font: inherit;
 }
-
+html, body {
+	overflow-x: hidden;
+}
 body {
 	font-family: $font-family_1;
 	min-height: 100vh;
@@ -307,6 +309,7 @@ footer {
 	fill: #EDC900;
 	scale: 1.2;
 }
+
 #courseSel {
 	width: 100%;
 }
@@ -408,7 +411,6 @@ select {
 
 	}
     .dropdown{
-
         order:4;
         &:hover{
 			.hamburger-icon{
@@ -733,3 +735,17 @@ select {
 	opacity: 0.4;
 }
 
+@media (max-width: 451px) {
+.alertd{
+	padding-inline: 5px;
+}
+.annd{
+	padding-inline: 5px;
+}
+.prod{
+	padding-inline: 5px;
+}
+.hamburger-icon{
+	padding-inline: 5px;
+}
+}
