@@ -22,3 +22,13 @@ Excel Pending Issues
 21. header colors are gone
 22. Scroll throttling
 23. border is coming green for headers
+24. Insert Columns and Rows
+25. seperate the rows and Columns 
+
+
+Immediate Issues:
+1. Fix resizing
+2. Operations inside cells
+3. Fix row and column classes
+4. Selection should scroll
+5. 

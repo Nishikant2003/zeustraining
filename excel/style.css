@@ -54,7 +54,7 @@ canvas.resize-row {
 
 .cell-editor {
     position: fixed;
-    background: transparent;
+    background: #ffffff;
     font-family: Arial, sans-serif;
     font-size: 12px;
     padding: 2px 4px;

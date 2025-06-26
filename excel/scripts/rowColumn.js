@@ -5,6 +5,7 @@ class RowColumn {
         this.cellCount = cellCount;
         this.cells = new Map();
         this.size = type === 'row' ? 25 : 100;
+
     }
 
     getCell(cellIndex) {

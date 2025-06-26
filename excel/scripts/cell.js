@@ -28,13 +28,6 @@ class Cell {
     }
 
     getBackgroundColor(selection) {
-        if (this.isHeader()) {
-            if ((this.row === 0 && selection.isColumnHighlighted(this.col)) ||
-                (this.col === 0 && selection.isRowHighlighted(this.row))) {
-                return '#000000';
-            }
-            return '#f0f0f0';
-        }
         if (selection.isFirstSelection(this.row, this.col)) return '#ffffff'
         if (selection.isCellSelected(this.row, this.col)) return '#a0d8b9';
         return '#ffffff';

@@ -15,8 +15,8 @@ class Selection {
     }
     isFirstSelection(row, col) {
         if (!this.currentSelection) return false;
-    return row === this.currentSelection.anchorRow && col === this.currentSelection.anchorCol;
-}
+        return row === this.currentSelection.anchorRow && col === this.currentSelection.anchorCol;
+    }
 
     addCellToSelection(row, col) {
         this.selectedCells.add(`${row},${col}`);
@@ -27,15 +27,6 @@ class Selection {
         return this.selectedCells.has(`${row},${col}`);
     }
 
-    isRowHighlighted(row) {
-        if (!this.currentSelection) return false;
-        return row >= this.currentSelection.startRow && row <= this.currentSelection.endRow;
-    }
-
-    isColumnHighlighted(col) {
-        if (!this.currentSelection) return false;
-        return col >= this.currentSelection.startCol && col <= this.currentSelection.endCol;
-    }
 
 selectRange(startRow, startCol, endRow, endCol) {
     this.clearSelection();
@@ -105,118 +96,83 @@ selectRange(startRow, startCol, endRow, endCol) {
             return { row, col };
         });
     }
-}
+    drawSelectionOutline() {
+        const currentSelection = this.getCurrentSelection();
+        if (!currentSelection) return;
 
-class SelectionCalculator {
-    constructor() {
-        this.cache = new Map();
-        this.cacheKey = null;
+        const ctx = grid.ctx;
+        const { startRow, startCol, endRow, endCol } = currentSelection;
+
+        const startX = grid.getColumnPosition(startCol) - grid.scrollX;
+        const startY = grid.getRowPosition(startRow) - grid.scrollY;
+        const endX = grid.getColumnPosition(endCol + 1) - grid.scrollX;
+        const endY = grid.getRowPosition(endRow + 1) - grid.scrollY;
+
+        ctx.strokeStyle = '#4CAF50';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
+
+        ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+ 
+        let handleSize = 7;
+        ctx.fillStyle = "#ffffff"
+        ctx.fillRect(endX - handleSize / 2, endY - handleSize / 2, handleSize, handleSize);
+        handleSize = 6;
+        ctx.fillStyle = '#4CAF50';
+        ctx.fillRect(endX - handleSize / 2, endY - handleSize / 2, handleSize, handleSize);
     }
+    handleKeyboardNavigation(e, grid) {
+    const currentSelection = this.getCurrentSelection();
+    if (!currentSelection) return false;
 
-    getNumericValues(grid, selection) {
-        const selectedCells = selection.getSelectedCellsArray();
-        const values = [];
+    const { startRow, startCol, endRow, endCol, anchorRow, anchorCol } = currentSelection;
+    let changed = false;
 
-        for (const { row, col } of selectedCells) {
-            if (row === 0 || col === 0) continue;
-
-            const cell = grid.getCell(row, col);
-            const value = cell.getValue();
-
-            if (value !== null && value !== undefined && value !== '') {
-                const numValue = this.parseNumber(value);
-                if (!isNaN(numValue)) {
-                    values.push(numValue);
-                }
-            }
-        }
-
-        return values;
-    }
-
-    parseNumber(value) {
-        if (typeof value === 'number') return value;
-
-        const str = String(value).trim();
-
-        if (str.endsWith('%')) {
-            return parseFloat(str.slice(0, -1)) / 100;
-        }
-
-        const cleaned = str.replace(/[$,€£¥]/g, '');
-
-        if (cleaned.startsWith('(') && cleaned.endsWith(')')) {
-            return -parseFloat(cleaned.slice(1, -1));
-        }
-
-        return parseFloat(cleaned);
-    }
-
-    calculate(grid, selection) {
-        const values = this.getNumericValues(grid, selection);
-
-        const stats = {
-            count: values.length,
-            sum: 0,
-            min: null,
-            max: null,
-            avg: null,
-            hasNumbers: values.length > 0
-        };
-
-        if (values.length === 0) {
-            return stats;
-        }
-
-        stats.sum = values.reduce((acc, val) => acc + val, 0);
-        stats.min = Math.min(...values);
-        stats.max = Math.max(...values);
-        stats.avg = stats.sum / stats.count;
-
-        return stats;
-    }
-
-    getFormattedStats(grid, selection) {
-        const stats = this.calculate(grid, selection);
-
-        if (!stats.hasNumbers) {
-            return "No numeric values selected";
-        }
-
-        const parts = [];
-
-        if (stats.count === 1) {
-            parts.push(`Value: ${this.formatNumber(stats.sum)}`);
+    if (e.shiftKey) {
+        let activeRow, activeCol;
+        if (anchorRow === startRow && anchorCol === startCol) {
+            activeRow = endRow; activeCol = endCol;
+        } else if (anchorRow === endRow && anchorCol === endCol) {
+            activeRow = startRow; activeCol = startCol;
+        } else if (anchorRow === startRow && anchorCol === endCol) {
+            activeRow = endRow; activeCol = startCol;
         } else {
-            parts.push(`Count: ${stats.count}`);
-            parts.push(`Sum: ${this.formatNumber(stats.sum)}`);
-            parts.push(`Avg: ${this.formatNumber(stats.avg)}`);
-            parts.push(`Min: ${this.formatNumber(stats.min)}`);
-            parts.push(`Max: ${this.formatNumber(stats.max)}`);
+            activeRow = startRow; activeCol = endCol;
         }
 
-        return parts.join(' | ');
-    }
-
-    formatNumber(num) {
-        if (num === null || num === undefined) return 'N/A';
-
-        if (Math.abs(num) < 0.01 && num !== 0) {
-            return num.toExponential(2);
+        if (e.key === 'ArrowUp') {
+            if (activeRow > 1) { activeRow--; changed = true; }
+        } else if (e.key === 'ArrowDown') {
+            if (activeRow < grid.rowCount - 1) { activeRow++; changed = true; }
+        } else if (e.key === 'ArrowLeft') {
+            if (activeCol > 1) { activeCol--; changed = true; }
+        } else if (e.key === 'ArrowRight') {
+            if (activeCol < grid.colCount - 1) { activeCol++; changed = true; }
         }
 
-        if (num % 1 === 0) {
-            return num.toLocaleString();
+        if (changed) {
+            this.selectRange(anchorRow, anchorCol, activeRow, activeCol);
+            grid.updateInfoDisplay();
+            grid.requestRender();
+            e.preventDefault();
+            return true;
         }
+    } else {
+        let newRow = startRow, newCol = startCol;
+        if (e.key === 'ArrowUp' && startRow > 1) { newRow--; changed = true; }
+        else if (e.key === 'ArrowDown' && endRow < grid.rowCount - 1) { newRow++; changed = true; }
+        else if (e.key === 'ArrowLeft' && startCol > 1) { newCol--; changed = true; }
+        else if (e.key === 'ArrowRight' && endCol < grid.colCount - 1) { newCol++; changed = true; }
 
-        return num.toLocaleString(undefined, {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        });
+        if (changed) {
+            this.selectRange(newRow, newCol, newRow, newCol);
+            grid.updateInfoDisplay();
+            grid.requestRender();
+            e.preventDefault();
+            return true;
+        }
     }
-
-    clearCache() {
-        this.cache.clear();
-        this.cacheKey = null;
-    }
+    return false;
 }
+}
+
