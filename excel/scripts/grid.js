@@ -17,12 +17,15 @@ class CanvasGrid {
 
         // Initialize systems
         this.selection = new Selection();
-        this.dragSelectingRows=false;
-        this.dragSelectingCols=false;
+        this.dragSelectingRows = false;
+        this.dragSelectingCols = false;
 
         // Initialize data structures
         this.rows = new Map();
         this.columns = new Map();
+
+        this.rowResizer = new RowResizer(this);
+        this.colResizer = new ColResizer(this);
 
         // Virtual rendering properties
         this.visibleRows = 0;
@@ -31,7 +34,7 @@ class CanvasGrid {
         this.endRow = 0;
         this.startCol = 0;
         this.endCol = 0;
-        
+
 
         // Performance optimization
         this.renderRequested = false;
@@ -70,11 +73,10 @@ class CanvasGrid {
     }
     initializeStructures() {
         for (let i = 0; i < this.colCount; i++) {
-            this.columns.set(i, new RowColumn(i, 'column', this.rowCount));
+            this.columns.set(i, new Column(i, this.rowCount));
         }
-
         for (let i = 0; i < this.rowCount; i++) {
-            this.rows.set(i, new RowColumn(i, 'row', this.colCount));
+            this.rows.set(i, new Row(i, this.colCount));
         }
     }
 
@@ -91,17 +93,16 @@ class CanvasGrid {
             this.colPositions.push(this.colPositions[i] + colWidth);
         }
     }
-
     getRow(index) {
         if (!this.rows.has(index)) {
-            this.rows.set(index, new RowColumn(index, 'row', this.colCount));
+            this.rows.set(index, new Row(index, this.colCount));
         }
         return this.rows.get(index);
     }
 
     getColumn(index) {
         if (!this.columns.has(index)) {
-            this.columns.set(index, new RowColumn(index, 'column', this.rowCount));
+            this.columns.set(index, new Column(index, this.rowCount));
         }
         return this.columns.get(index);
     }
@@ -114,10 +115,10 @@ class CanvasGrid {
         this.getRow(row).setCellValue(col, value);
     }
 
-  setCellValue(row, col, value) {
-    this.getRow(row).setCellValue(col, value);
-    this.requestRender();
-}
+    setCellValue(row, col, value) {
+        this.getRow(row).setCellValue(col, value);
+        this.requestRender();
+    }
 
     // Load data from JSON
     async loadData(url = 'data.json') {
@@ -157,23 +158,19 @@ class CanvasGrid {
         this.requestRender();
     }
     setupCanvas() {
-        // Update device pixel ratio
         this.dpr = window.devicePixelRatio || 1;
 
-        // Set canvas size in device pixels
         this.canvas.width = this.container.clientWidth * this.dpr;
         this.canvas.height = this.container.clientHeight * this.dpr;
 
-        // Set canvas style size in CSS pixels
         this.canvas.style.width = this.container.clientWidth + 'px';
         this.canvas.style.height = this.container.clientHeight + 'px';
 
-        // Scale context for crisp drawing
         this.ctx.setTransform(1, 0, 0, 1, 0, 0); //previously scaled value is removed here
         this.ctx.scale(this.dpr, this.dpr);
 
-        this.visibleRows = Math.ceil(this.canvas.height / (25 * this.dpr)) ;
-        this.visibleCols = Math.ceil(this.canvas.width / (100 * this.dpr)) ;
+        this.visibleRows = Math.ceil(this.canvas.height / (25 * this.dpr));
+        this.visibleCols = Math.ceil(this.canvas.width / (100 * this.dpr));
     }
 
     updateScrollPosition() {
@@ -304,32 +301,111 @@ class CanvasGrid {
         this.container.addEventListener('scroll', () => {
             this.handleScroll();
         }, { passive: true });
+        // Pointer move: show resize cursor or handle resizing
 
+        
         this.canvas.addEventListener('pointermove', (e) => {
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
-          if (this.dragSelectingRows) {
-            const cellPos = this.getCellAtPosition(x, y);
-            if (cellPos.row > 0) {
-                //add visivle rows
+            // If resizing, handle resize
+            if (this.rowResizer.isResizing) {
+                this.rowResizer.handleResize(y);
 
-                this.selection.selectRange(this.selection.dragStartRow, 1, cellPos.row,this.endCol);
-                this.updateInfoDisplay();
-                this.requestRender();
+                return;
             }
-        }
-          if (this.dragSelectingCols) {
-            const cellPos = this.getCellAtPosition(x, y);
-            if (cellPos.col > 0) {
-                //add visible columns
-                this.selection.selectRange(1,this.selection.dragStartCol,this.endRow, cellPos.col);
-                this.updateInfoDisplay();
-                this.requestRender();
-            }
-        }
+            if (this.colResizer.isResizing) {
+                this.colResizer.handleResize(x);
 
+                return;
+            }
+
+            // Show resize cursor if near row or col border
+            let cursor = '';
+            // Check for row resize (near bottom of row header)
+            for (let row = 1; row < this.rowCount; row++) {
+                const rowY = this.getRowPosition(row) - this.scrollY;
+                if (Math.abs(y - rowY) < 4 && x < this.getColumn(0).getSize()) {
+                    cursor = 'row-resize';
+                    break;
+                }
+            }
+            // Check for col resize (near right of col header)
+            for (let col = 1; col < this.colCount; col++) {
+                const colX = this.getColumnPosition(col) - this.scrollX;
+                if (Math.abs(x - colX) < 4 && y < this.getRow(0).getSize()) {
+                    cursor = 'col-resize';
+                    break;
+                }
+            }
+            this.canvas.style.cursor = cursor;
+        });
+
+
+        // Pointer move handler
+        this.canvas.addEventListener('pointermove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Handle row resizing
+            if (this.rowResizer.isResizing) {
+                this.rowResizer.handleResize(y);
+                return;
+            }
+
+            // Handle column resizing
+            if (this.colResizer.isResizing) {
+                this.colResizer.handleResize(x);
+                return;
+            }
+
+            // Change cursor if hovering near resizable row or column edge
+            let resizingCursorSet = false;
+            for (let row = 1; row < this.rowCount; row++) {
+                const rowY = this.getRowPosition(row) - this.scrollY;
+                if (Math.abs(y - rowY) < 4 && x < this.getColumn(0).getSize()) {
+                    this.canvas.style.cursor = 'ns-resize';
+                    resizingCursorSet = true;
+                    break;
+                }
+            }
+            if (!resizingCursorSet) {
+                for (let col = 1; col < this.colCount; col++) {
+                    const colX = this.getColumnPosition(col) - this.scrollX;
+                    if (Math.abs(x - colX) < 4 && y < this.getRow(0).getSize()) {
+                        this.canvas.style.cursor = 'ew-resize';
+                        resizingCursorSet = true;
+                        break;
+                    }
+                }
+            }
+            if (!resizingCursorSet) {
+                this.canvas.style.cursor = 'cell';
+            }
+
+            // Handle drag-select rows
+            if (this.dragSelectingRows) {
+                const cellPos = this.getCellAtPosition(x, y);
+                if (cellPos.row > 0) {
+                    this.selection.selectRange(this.selection.dragStartRow, 1, cellPos.row, this.endCol);
+                    this.updateInfoDisplay();
+                    this.requestRender();
+                }
+            }
+
+            // Handle drag-select columns
+            if (this.dragSelectingCols) {
+                const cellPos = this.getCellAtPosition(x, y);
+                if (cellPos.col > 0) {
+                    this.selection.selectRange(1, this.selection.dragStartCol, this.endRow, cellPos.col);
+                    this.updateInfoDisplay();
+                    this.requestRender();
+                }
+            }
+
+            // Handle cell drag selection
             if (this.selection.isDragging) {
                 const cellPos = this.getCellAtPosition(x, y);
                 if (cellPos.row > 0 && cellPos.col > 0) {
@@ -337,13 +413,82 @@ class CanvasGrid {
                     this.updateInfoDisplay();
                     this.requestRender();
                 }
-                return;
             }
-
-        
         });
 
+        // Pointer down handler
+        this.canvas.addEventListener('pointerdown', (e) => {
+            if (this.isEditing) return;
+
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Row resize hit detection
+            for (let row = 1; row < this.rowCount; row++) {
+                const rowY = this.getRowPosition(row) - this.scrollY;
+                if (Math.abs(y - rowY) < 4 && x < this.getColumn(0).getSize()) {
+                    this.rowResizer.startResize(row - 1, y);
+                    return;
+                }
+            }
+
+            // Column resize hit detection
+            for (let col = 1; col < this.colCount; col++) {
+                const colX = this.getColumnPosition(col) - this.scrollX;
+                if (Math.abs(x - colX) < 4 && y < this.getRow(0).getSize()) {
+                    this.colResizer.startResize(col - 1, x);
+                    return;
+                }
+            }
+
+            const cellPos = this.getCellAtPosition(x, y);
+
+            if (cellPos.row >= 0 && cellPos.row < this.rowCount &&
+                cellPos.col >= 0 && cellPos.col < this.colCount) {
+
+                // Row header clicked
+                if (cellPos.col === 0 && cellPos.row > 0) {
+                    this.selection.startDragSelection(cellPos.row, 1);
+                    this.dragSelectingRows = true;
+
+                    this.selection.selectRange(this.selection.dragStartRow, 1, cellPos.row, this.endCol);
+                    this.updateInfoDisplay();
+                    this.requestRender();
+                }
+                // Column header clicked
+                else if (cellPos.row === 0 && cellPos.col > 0) {
+                    this.selection.startDragSelection(1, cellPos.col);
+                    this.dragSelectingCols = true;
+                    this.selection.selectRange(1, this.selection.dragStartCol, this.endRow, cellPos.col);
+                    this.updateInfoDisplay();
+                    this.requestRender();
+                }
+                // Top-left corner (select all)
+                else if (cellPos.row === 0 && cellPos.col === 0) {
+                    this.selection.selectRange(1, 1, this.rowCount - 1, this.colCount - 1);
+
+                    this.updateInfoDisplay();
+                    this.requestRender();
+                }
+                // Regular cell
+                else if (cellPos.row > 0 && cellPos.col > 0) {
+                    this.selection.startDragSelection(cellPos.row, cellPos.col);
+                    this.updateInfoDisplay();
+                    this.requestRender();
+                    this.startEditing(cellPos.row, cellPos.col);
+                }
+            }
+        });
+
+        // Pointer up handler
         document.addEventListener('pointerup', () => {
+            if (this.rowResizer.isResizing) {
+                this.rowResizer.stopResize();
+            }
+            if (this.colResizer.isResizing) {
+                this.colResizer.stopResize();
+            }
             if (this.dragSelectingRows) {
                 this.dragSelectingRows = false;
                 this.selection.finishDragSelection();
@@ -355,51 +500,8 @@ class CanvasGrid {
             if (this.selection.isDragging) {
                 this.selection.finishDragSelection();
             }
-            
         });
-         this.canvas.addEventListener('pointerdown', (e) => {
-            if (this.isEditing) return;
 
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-
-            const cellPos = this.getCellAtPosition(x, y);
-
-            if (cellPos.row >= 0 && cellPos.row < this.rowCount &&
-                cellPos.col >= 0 && cellPos.col < this.colCount) {
-
-                // Handle row header click (select entire row)
-                if (cellPos.col === 0 && cellPos.row > 0) {
-                    this.selection.startDragSelection(cellPos.row, 1); 
-                    this.dragSelectingRows = true;
-                    this.updateInfoDisplay();
-                    this.requestRender();
-                }
-                // Handle column header click (select entire column)  
-                else if (cellPos.row === 0 && cellPos.col > 0) {
-                    this.selection.startDragSelection(1, cellPos.col)
-                    this.dragSelectingCols=true;
-                    // this.selection.selectRange(1, cellPos.col, this.rowCount - 1, cellPos.col);
-                    this.updateInfoDisplay();
-                    this.requestRender();
-                }
-                // Handle corner click (select all)
-                else if (cellPos.row === 0 && cellPos.col === 0) {
-                    this.selection.selectRange(1, 1, this.rowCount - 1, this.colCount - 1);
-                    this.updateInfoDisplay();
-                    this.requestRender();
-                }
-                // Handle regular cell click (start drag selection)
-                else if (cellPos.row > 0 && cellPos.col > 0) {
-                    this.selection.startDragSelection(cellPos.row, cellPos.col);
-                    this.updateInfoDisplay();
-                    this.requestRender();
-                    this.startEditing(cellPos.row, cellPos.col);
-                }
-            }
-        });
         this.canvas.addEventListener('dblclick', (e) => {
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -412,13 +514,13 @@ class CanvasGrid {
         });
 
         document.addEventListener('keydown', (e) => {
-    if (!this.isEditing) {
-        if (this.selection.handleKeyboardNavigation(e, this)) {
-            return;
-        }
-    }
-});
-        
+            if (!this.isEditing) {
+                if (this.selection.handleKeyboardNavigation(e, this)) {
+                    return;
+                }
+            }
+        });
+
     }
 
     startEditing(row, col) {
@@ -444,7 +546,7 @@ class CanvasGrid {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 this.stopEditing(true);
-            } 
+            }
         };
 
         this.editorBlurHandler = () => {
@@ -558,6 +660,7 @@ class CanvasGrid {
             }
         }
         this.drawGridLines();
+        this.selection.drawSelectionOutline();
 
         // Render visible row headers
         for (const rowIndex of visibleDataRows) {
@@ -579,7 +682,7 @@ class CanvasGrid {
             const y = 0;
             const width = this.getColumn(colIndex).getSize();
             const height = this.getRow(0).getSize();
-            
+
             if (x + width >= 0 && x < canvas.width) {
                 cell.draw(ctx, x, y, width, height, this.selection);
             }
@@ -590,9 +693,15 @@ class CanvasGrid {
         const cornerWidth = this.getColumn(0).getSize();
         const cornerHeight = this.getRow(0).getSize();
         cornerCell.draw(ctx, 0, 0, cornerWidth, cornerHeight, this.selection);
-
-        // selection outline
-        this.selection.drawSelectionOutline();
+        ctx.save();
+        ctx.fillStyle = "#cccccc"; 
+        ctx.beginPath();
+        ctx.moveTo(cornerWidth - 14, cornerHeight-2); // left point of base
+        ctx.lineTo(cornerWidth-2, cornerHeight-2);      // right point of base
+        ctx.lineTo(cornerWidth-2, cornerHeight - 14); // top point
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
 
     }
     drawGridLines() {
@@ -626,24 +735,25 @@ class CanvasGrid {
         }
 
         ctx.restore();
+        if (this.rowResizer.isResizing) {
+            // Draw at the border being dragged (rowIndex + 1)
+            const rowY = this.getRowPosition(this.rowResizer.rowIndex + 1) - this.scrollY;
+            this.rowResizer.drawResizeLine(this.ctx, rowY);
+        }
+        if (this.colResizer.isResizing) {
+            // Draw at the border being dragged (colIndex + 1)
+            const colX = this.getColumnPosition(this.colResizer.colIndex + 1) - this.scrollX;
+            this.colResizer.drawResizeLine(this.ctx, colX);
+        }
     }
-    
+
 
     updateInfoDisplay() {
         const selectionInfo = this.selection.getSelectionInfo();
         this.info.textContent = selectionInfo;
     }
-    resizeRow(){
-        const height = this.getRow(0).getSize();
-        
-    }
-    resizeCol(){
-        const width = this.getColumn(0).getSize();
 
-    }
 }
-
-
 
 const grid = new CanvasGrid('grid', 100001, 1001);
 

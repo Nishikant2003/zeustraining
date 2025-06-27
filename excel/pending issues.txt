@@ -24,11 +24,15 @@ Excel Pending Issues
 23. border is coming green for headers
 24. Insert Columns and Rows
 25. seperate the rows and Columns 
-
+26. Selection should scroll
 
 Immediate Issues:
-1. Fix resizing
-2. Operations inside cells
-3. Fix row and column classes
-4. Selection should scroll
-5. 
+1. Fix resizing//
+2. Fix row and column classes//
+3. Selection box issues with header coliding//
+4. resize line//
+5. DYNAMIC ROW WIDTH
+6. editing a selected cell on typing
+7. select all rows and cols dynamically
+*. Operations inside cells
+*. Insert rows and Columns

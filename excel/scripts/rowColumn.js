@@ -1,26 +1,48 @@
-class RowColumn {
-    constructor(index, type, cellCount) {
+class Row {
+    constructor(index, colCount) {
         this.index = index;
-        this.type = type;
-        this.cellCount = cellCount;
+        this.cellCount = colCount;
         this.cells = new Map();
-        this.size = type === 'row' ? 25 : 100;
-
+        this.size = 25; // Default row height
     }
 
-    getCell(cellIndex) {
-        if (!this.cells.has(cellIndex)) {
-            const [row, col] = this.type === 'row'
-                ? [this.index, cellIndex]
-                : [cellIndex, this.index];
-            this.cells.set(cellIndex, new Cell(row, col));
+    getCell(colIndex) {
+        if (!this.cells.has(colIndex)) {
+            this.cells.set(colIndex, new Cell(this.index, colIndex));
         }
-        return this.cells.get(cellIndex);
+        return this.cells.get(colIndex);
     }
 
-    setCellValue(cellIndex, value) {
-        const cell = this.getCell(cellIndex);
-        cell.setValue(value);
+    setCellValue(colIndex, value) {
+        this.getCell(colIndex).setValue(value);
+    }
+
+    setSize(newSize) {
+        this.size = Math.max(10, newSize);
+    }
+
+    getSize() {
+        return this.size;
+    }
+}
+
+class Column {
+    constructor(index, rowCount) {
+        this.index = index;
+        this.cellCount = rowCount;
+        this.cells = new Map();
+        this.size = 100; // Default column width
+    }
+
+    getCell(rowIndex) {
+        if (!this.cells.has(rowIndex)) {
+            this.cells.set(rowIndex, new Cell(rowIndex, this.index));
+        }
+        return this.cells.get(rowIndex);
+    }
+
+    setCellValue(rowIndex, value) {
+        this.getCell(rowIndex).setValue(value);
     }
 
     setSize(newSize) {
